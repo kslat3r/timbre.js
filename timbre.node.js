@@ -17,21 +17,21 @@ if (!Readable) {
 }
 
 function TimbreNodePlayer(sys) {
-    
+
     this.maxSamplerate     = 48000;
     this.defaultSamplerate = 44100;
     this.env = "node";
     this.node = null;
-    
+
     this.play = function() {
         this.node = new Readable();
         this.node._read = function(n, fn) {
             var inL = sys.strmL, inR = sys.strmR;
             var buf = new Buffer(n);
-            
+
             var i, j = 0;
             var imax = inL.length;
-            
+
             n = (n >> 2) / sys.streamsize;
             while (n--) {
                 sys.process();
@@ -51,7 +51,7 @@ function TimbreNodePlayer(sys) {
         };
         this.node.pipe(new Speaker({sampleRate:sys.samplerate}));
     };
-    
+
     this.pause = function() {
         process.nextTick(this.node.emit.bind(this.node, "end"));
     };
@@ -86,10 +86,10 @@ Decoder.getBinaryWithPath = function(path, callback) {
 Decoder.ogg_decode = ogg && vorbis && function(src, onloadedmetadata/*, onloadeddata*/) {
     /*
     var decoder = new ogg.Decoder();
-    
+
     decoder.on("stream", function (stream) {
         var vd = new vorbis.Decoder();
-        
+
         // the "format" event contains the raw PCM format
         vd.on('format', function (format) {
             // send the raw PCM data to stdout
@@ -101,10 +101,10 @@ Decoder.ogg_decode = ogg && vorbis && function(src, onloadedmetadata/*, onloaded
         vd.on('error', function (err) {
             // maybe try another decoder...
         });
-        
+
         stream.pipe(vd);
     });
-    
+
     fs.createReadStream(src).pipe(decoder);
     */
     onloadedmetadata(false);
@@ -115,7 +115,7 @@ Decoder.mp3_decode = lame && function(src, onloadedmetadata, onloadeddata) {
     var bytes = [];
     var samplerate, channels, mixdown, bufferL, bufferR, duration;
     var bitDepth;
-    
+
     decoder.on("format", function(format) {
         samplerate = format.sampleRate;
         channels   = format.channels;
@@ -128,14 +128,14 @@ Decoder.mp3_decode = lame && function(src, onloadedmetadata, onloadeddata) {
     });
     decoder.on("end", function() {
         var length = bytes.length / channels / (bitDepth / 8);
-        
+
         duration = length / samplerate;
         mixdown = new Float32Array(length);
         if (channels === 2) {
             bufferL = new Float32Array(length);
             bufferR = new Float32Array(length);
         }
-        
+
         var uint8 = new Uint8Array(bytes);
         var data;
         if (bitDepth === 16) {
@@ -145,14 +145,14 @@ Decoder.mp3_decode = lame && function(src, onloadedmetadata, onloadeddata) {
         } else if (bitDepth === 24) {
             data = _24bit_to_32bit(uint8.buffer);
         }
-        
+
         onloadedmetadata({
             samplerate: samplerate,
             channels  : channels,
             buffer    :  [mixdown, bufferL, bufferR],
             duration  : duration
         });
-        
+
         var i, imax, j, k = 1 / ((1 << (bitDepth-1)) - 1), x;
         if (channels === 2) {
             for (i = j = 0, imax = mixdown.length; i < imax; ++i) {
@@ -165,8 +165,10 @@ Decoder.mp3_decode = lame && function(src, onloadedmetadata, onloadeddata) {
                 bufferL[i] = data[i] * k;
             }
         }
-        
+
         onloadeddata();
     });
-    fs.createReadStream(src).pipe(decoder);
+
+    var request = require('request');
+    request(src).pipe(decoder);
 };

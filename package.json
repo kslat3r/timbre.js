@@ -16,7 +16,8 @@
   ],
   "dependencies": {
     "readable-stream": "^1.0.33",
-    "speaker": "^0.2.1"
+    "speaker": "^0.2.1",
+    "request": "*"
   },
   "devDependencies": {
     "chai": "^1.10.0",
