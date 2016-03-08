@@ -3387,6 +3387,7 @@
             var xhr = new XMLHttpRequest();
             xhr.open("GET", path);
             xhr.responseType = "arraybuffer";
+            xhr.withCredentials = true;
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4) {
                     if (xhr.response) {
